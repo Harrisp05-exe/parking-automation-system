@@ -1,5 +1,9 @@
 # Parkflow — Java + Django parking automation
 
+Live dashboard: https://parking-automation-system-ten.vercel.app/
+
+To use the hosted backend, set `KIOSK_API_KEY` to your production kiosk key and run `java/run-hosted-kiosk.ps1`. The deployment machine can read its saved key from the ignored `.vercel/kiosk-key.txt` file automatically. Never publish this key. The Django server does not need to run locally when using the hosted backend.
+
 A Java Swing desktop form takes driver name, number plate, car model and color. Django assigns the first available spot, records server entry time, and returns a private parking-pass URL. Java opens this URL in your default browser. The map shows available, occupied and your assigned space, refreshing every five seconds. Checkout records server exit time, releases the spot, and generates a printable bill.
 
 Defaults: **24 spaces, INR 50 per started hour, minimum one hour**. An exact 60-minute visit costs INR 50; 60 minutes plus any fraction costs INR 100. Rates and currency are saved on each visit so later configuration changes do not change an existing visit's rate. Billing is calculated on the server. This generates a bill; it does not process payment. Physical occupancy is based on check-in and checkout, not sensors or cameras.

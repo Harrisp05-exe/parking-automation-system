@@ -1,5 +1,9 @@
 .venv
 .env
+.env*
+.vercel
+.agents
+skills-lock.json
 db.sqlite3
 java
 __pycache__

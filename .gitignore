@@ -6,3 +6,6 @@ __pycache__/
 *.class
 staticfiles/
 .vercel/
+
+.vercel
+.env*

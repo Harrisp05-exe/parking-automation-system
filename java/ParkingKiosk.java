@@ -24,7 +24,7 @@ public class ParkingKiosk extends JFrame {
         JLabel brand = new JLabel("P  parkflow"); brand.setFont(new Font("SansSerif",Font.BOLD,28)); brand.setForeground(new Color(17,110,85)); panel.add(brand);
         panel.add(Box.createVerticalStrut(20)); JLabel title = new JLabel("Let's find your space."); title.setFont(new Font("SansSerif",Font.BOLD,22)); panel.add(title);
         field(panel, "Driver name", owner); field(panel, "Vehicle number plate", plate); field(panel, "Car make / model", model); field(panel, "Car color", color);
-        panel.add(Box.createVerticalStrut(22)); submit.setBackground(new Color(17,110,85)); submit.setForeground(Color.WHITE); submit.setAlignmentX(Component.LEFT_ALIGNMENT); panel.add(submit);
+        panel.add(Box.createVerticalStrut(22)); submit.setBackground(new Color(17,110,85)); submit.setForeground(Color.BLACK); submit.setAlignmentX(Component.LEFT_ALIGNMENT); panel.add(submit);
         status.setEditable(false); status.setLineWrap(true); status.setWrapStyleWord(true); status.setOpaque(false); status.setBorder(new EmptyBorder(18,0,12,0)); status.setAlignmentX(Component.LEFT_ALIGNMENT); panel.add(status);
         reopen.setAlignmentX(Component.LEFT_ALIGNMENT); next.setAlignmentX(Component.LEFT_ALIGNMENT); reopen.setVisible(false); next.setVisible(false); panel.add(reopen); panel.add(Box.createVerticalStrut(10)); panel.add(next);
         submit.addActionListener(e -> checkIn()); reopen.addActionListener(e -> openPass()); next.addActionListener(e -> reset());
@@ -35,6 +35,20 @@ public class ParkingKiosk extends JFrame {
         input.setMaximumSize(new Dimension(Integer.MAX_VALUE,38)); input.setFont(new Font("SansSerif",Font.PLAIN,16)); input.setAlignmentX(Component.LEFT_ALIGNMENT); panel.add(input);
     }
     private static String enc(String value) {return URLEncoder.encode(value.trim(),StandardCharsets.UTF_8);}
+    static String errorMessage(Throwable error, String server) {
+        Throwable cause = error;
+        while (cause instanceof java.util.concurrent.ExecutionException && cause.getCause() != null) cause = cause.getCause();
+        for (Throwable nested = cause; nested != null; nested = nested.getCause()) {
+            if (nested instanceof java.net.http.HttpTimeoutException)
+                return "Server timed out at " + server + ". Check that Django is running, then retry with the same details.";
+            if (nested instanceof java.net.ConnectException || nested instanceof java.net.UnknownHostException || nested instanceof java.nio.channels.UnresolvedAddressException)
+                return "Cannot connect to " + server + ". Start Django and ensure PARKING_SERVER_URL matches its address. Keep the server terminal open.";
+            if (nested instanceof javax.net.ssl.SSLException)
+                return "HTTPS connection failed. Check the server URL and its TLS certificate.";
+        }
+        String message = cause.getMessage();
+        return message == null || message.isBlank() ? cause.getClass().getSimpleName() + ": check your server connection and configuration." : message;
+    }
     private void checkIn() {
         if (!submit.isEnabled()) return;
         if (owner.getText().isBlank() || plate.getText().isBlank() || model.getText().isBlank() || color.getText().isBlank()) {status.setText("Please fill in all four fields."); return;}
@@ -55,7 +69,7 @@ public class ParkingKiosk extends JFrame {
             }
             protected void done() {
                 try {pass=URI.create(get()); reopen.setVisible(true); next.setVisible(true); for(JTextField f:new JTextField[]{owner,plate,model,color}) f.setEditable(false); status.setText("Space assigned! Your private parking pass:\n"+pass); openPass();}
-                catch (Exception e) {Throwable cause=e.getCause()==null?e:e.getCause(); status.setText("Check-in failed: "+cause.getMessage()+"\nYou can retry safely with the same details."); submit.setEnabled(true); for(JTextField f:new JTextField[]{owner,plate,model,color}) f.setEditable(true);}
+                catch (Exception e) {status.setText("Check-in failed: "+errorMessage(e, base)+"\nYou can retry safely with the same details."); submit.setEnabled(true); for(JTextField f:new JTextField[]{owner,plate,model,color}) f.setEditable(true);}
             }
         }.execute();
     }

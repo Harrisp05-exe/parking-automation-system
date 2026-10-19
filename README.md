@@ -82,6 +82,14 @@ Deployment configuration is included, but an actual deployment requires your Ver
 
 ## Configuration and design
 
+### Cannot connect / older versions show "Check-in failed: null"
+
+Keep Django running in one terminal: `.\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000`.
+In a second terminal, set `$env:PARKING_SERVER_URL='http://127.0.0.1:8000'`, then compile and launch Java.
+Check that http://127.0.0.1:8000/ opens in your browser. If you choose another port, use that same port in both commands.
+Environment changes apply to newly launched Java processes, so close and reopen the kiosk after changing the URL.
+Pull and recompile the latest source to see descriptive connection errors instead of `null`.
+
 - Change rates/currency/time zone in `.env` locally or Vercel environment settings. Restart/redeploy after changes.
 - `seed_spots --count 32` adds spots. It never deletes existing spaces or history; a smaller count does not shrink the lot.
 - Database partial unique constraints prevent two active visits sharing one spot or one plate. Transactions and row locking coordinate PostgreSQL allocations. SQLite is intended for local demos; PostgreSQL is required for production concurrency.

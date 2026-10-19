@@ -73,3 +73,21 @@ class ParkingTests(TestCase):
         self.assertEqual(browser.post(url+'checkout/', {'csrfmiddlewaretoken':csrf}).status_code,302)
     def test_unknown_pass(self):
         self.assertEqual(self.client.get(f'/visit/{uuid.uuid4()}/').status_code,404)
+    def test_https_checkout_before_one_hour(self):
+        url=self.arrive().content.decode()
+        browser=Client(enforce_csrf_checks=True)
+        response=browser.get(url,secure=True)
+        self.assertEqual(response.headers['Referrer-Policy'],'same-origin')
+        csrf=browser.cookies['csrftoken'].value
+        # Browsers without Origin must send the same-origin HTTPS Referer.
+        response=browser.post(url+'checkout/',{'csrfmiddlewaretoken':csrf},secure=True,HTTP_REFERER='https://testserver'+url)
+        self.assertEqual(response.status_code,302)
+        self.assertEqual(Visit.objects.get().total,Decimal('50.00'))
+    def test_https_checkout_rejects_foreign_origin(self):
+        url=self.arrive().content.decode()
+        browser=Client(enforce_csrf_checks=True)
+        browser.get(url,secure=True)
+        csrf=browser.cookies['csrftoken'].value
+        response=browser.post(url+'checkout/',{'csrfmiddlewaretoken':csrf},secure=True,HTTP_ORIGIN='https://untrusted.example')
+        self.assertEqual(response.status_code,403)
+        self.assertIsNone(Visit.objects.get().exited_at)

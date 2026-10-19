@@ -35,7 +35,9 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = PRODUCTION
 CSRF_COOKIE_SECURE = PRODUCTION
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = 'no-referrer'
+# Keep same-origin form Referer headers for Django's HTTPS CSRF checks.
+# Private pass URLs are still withheld from cross-origin destinations.
+SECURE_REFERRER_POLICY = 'same-origin'
 SECURE_HSTS_SECONDS = 31536000 if PRODUCTION else 0
 PARKING_RATE = Decimal(os.getenv('PARKING_RATE', '50.00'))
 PARKING_CURRENCY = os.getenv('PARKING_CURRENCY', 'INR')
